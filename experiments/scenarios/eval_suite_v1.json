@@ -1,0 +1,13 @@
+{
+  "name": "eval_suite_v1",
+  "description": "FROZEN evaluation suite (Developer 4). Every compared method trains and is evaluated on exactly these conditions: the same fixed scenarios and the same seeded layout sequence (Master Context 43). Changing this file invalidates previously reported numbers.",
+  "fixed_scenarios": ["demo_10x10_3agents.json"],
+  "random": {
+    "enabled": true,
+    "grid_size": 10,
+    "num_obstacles": 4,
+    "max_steps": 60,
+    "episodes": 30,
+    "seed_start": 1000
+  }
+}

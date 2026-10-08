@@ -1,0 +1,22 @@
+{
+  "name": "demo_10x10_3agents",
+  "description": "Deterministic final-demonstration scenario (Master Context 63). Mirrors the Unity demo world. Frozen: do not edit without regenerating experiment results.",
+  "height": 10,
+  "width": 10,
+  "max_steps": 60,
+  "seed": 42,
+  "obstacles": [
+    [4, 1],
+    [4, 2],
+    [4, 7],
+    [4, 8],
+    [6, 3],
+    [6, 4],
+    [6, 5]
+  ],
+  "agents": [
+    { "id": 0, "start": [0, 0], "goal": [9, 9] },
+    { "id": 1, "start": [9, 0], "goal": [0, 9] },
+    { "id": 2, "start": [0, 5], "goal": [4, 5] }
+  ]
+}

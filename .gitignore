@@ -1,0 +1,84 @@
+# ---------------------------------------------------------------------------
+# Secrets & credentials — NEVER commit these.
+# If a real secret file is added later, it is ignored automatically.
+# ---------------------------------------------------------------------------
+# Environment files (keep a committed sample if you need one: !.env.example)
+.env
+.env.*
+!.env.example
+*.env
+.envrc
+
+# Private keys / certificates / keystores
+*.key
+*.pem
+*.p12
+*.pfx
+*.jks
+*.keystore
+*.ppk
+
+# SSH keys
+id_rsa
+id_dsa
+id_ecdsa
+id_ed25519
+id_rsa.pub
+id_ed25519.pub
+
+# Cloud / service account credentials
+credentials.json
+credentials*.json
+service-account*.json
+service_account*.json
+client_secret*.json
+gcloud-*.json
+*.credentials
+secrets/
+secrets.*
+
+# Tokens & auth stores
+*.token
+token.txt
+tokens.json
+.vault-token
+.npmrc
+.pypirc
+.netrc
+
+# ---------------------------------------------------------------------------
+# Python
+# ---------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.venv/
+venv/
+
+# ---------------------------------------------------------------------------
+# Unity
+# ---------------------------------------------------------------------------
+unity_frontend/Library/
+unity_frontend/Temp/
+unity_frontend/Obj/
+unity_frontend/Logs/
+unity_frontend/UserSettings/
+unity_frontend/*.csproj
+unity_frontend/*.sln
+
+# ---------------------------------------------------------------------------
+# Models & experiment artifacts (future phases)
+# ---------------------------------------------------------------------------
+models/
+experiments/logs/
+experiments/results/
+experiments/plots/
+
+# ---------------------------------------------------------------------------
+# OS / IDE
+# ---------------------------------------------------------------------------
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

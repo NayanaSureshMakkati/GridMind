@@ -1,8 +1,4 @@
-# ---------------------------------------------------------------------------
-# Secrets & credentials — NEVER commit these.
-# If a real secret file is added later, it is ignored automatically.
-# ---------------------------------------------------------------------------
-# Environment files (keep a committed sample if you need one: !.env.example)
+# Environment files 
 .env
 .env.*
 !.env.example

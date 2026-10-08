@@ -1,7 +1,6 @@
 # GridMind — Intelligent Multi-Agent Navigation System using Reinforcement Learning in a 3D Simulation Environment
 
-Final-year engineering project. Multiple agents learn to navigate a shared
-discrete grid world while avoiding static obstacles and each other. Python is
+Multiple agents learn to navigate a shared discrete grid world while avoiding static obstacles and each other. Python is
 the authoritative logical simulation + RL backend; Unity visualizes what Python
 decides.
 
@@ -128,13 +127,22 @@ independently.
 
 ## Setup
 
-Requires **Python 3.10+**.
+**Prerequisites:** Python 3.10+ (Unity 2021.3 LTS+ is optional — only needed to
+watch a run in 3D).
 
 ```bash
 python -m venv .venv
 source .venv/bin/activate        # Windows Git Bash: source .venv/Scripts/activate
-pip install -r requirements.txt
+pip install -r requirements.txt  # numpy, pytest, torch, matplotlib
 ```
+
+Verify the install by running the test suite (`## Running the tests` below).
+
+Every experiment is runnable from a clean checkout with no Unity: checkpoints,
+reports and plots are all written to git-ignored directories (see `.gitignore`),
+so running experiments never dirties the repository. To see a run in 3D, do the
+optional Unity steps in `docs/integration_guide.md` (add `unity_frontend/` in
+Unity Hub, open `Assets/Scenes/GridMindSimulation.unity`, press **Play**).
 
 ## Running the tests
 
@@ -171,6 +179,128 @@ python main.py --mode visualize --algorithm coordinated --agents 3 \
 
 Every mode and flag is documented in `docs/integration_guide.md`; experiment
 methodology and metric definitions are in `docs/experiment_protocol.md`.
+
+## Running the experiments
+
+All experiment code is reachable two ways: the single `main.py` CLI, and the
+standalone driver scripts in `scripts/`. Every number these produce comes from an
+executed episode or a measured training run — nothing is pre-filled. Methodology,
+fair-comparison rules and metric definitions live in
+`docs/experiment_protocol.md`.
+
+### Methods and modes
+
+Methods (CLI aliases): `random`, `qlearning`, `dqn`, `multiagent` (Independent
+DQN), `rule_based`, `coordinated` (Coordinated DQN), `ctde` (CTDE-inspired).
+
+| Command | What it does | Output |
+|---------|--------------|--------|
+| `python main.py --mode demo` | deterministic ASCII world, random policy (no RL, no Unity) | stdout |
+| `python main.py --mode train --algorithm <a>` | trains one method, saves the checkpoint, writes report + plots | `models/`, `experiments/results/`, `experiments/plots/` |
+| `python main.py --mode evaluate --algorithm <a>` | evaluates a saved checkpoint (no retraining) | `experiments/results/evaluate_<a>.{json,csv}` |
+| `python main.py --mode compare` | Phase 9/10 full comparison across methods | `comparison.{json,csv}`, `comparison_episodes.csv`, `comparison_training_history.csv`, plots |
+| `python main.py --mode ablation` | Phase 12: independent vs rule-based vs coordinated (vs CTDE) | `ablation.{json,csv}`, `ablation_episodes.csv`, plots |
+| `python main.py --mode scalability` | Phase 13: same layout at increasing agent counts | `scalability.{json,csv}`, `scalability_episodes.csv`, plots |
+| `python main.py --mode visualize --algorithm <a>` | streams authoritative state to Unity (or a headless client) | live TCP on `:8765`, optional JSON-Lines event log |
+
+Key flags: `--train-episodes`, `--eval-episodes`, `--fixed-eval-episodes`,
+`--seed`, `--scenario`, `--suite`, `--methods`, `--agents`, `--agent-counts`,
+`--quick`, `--no-plots`, `--no-save-models`, `--model`, `--model-tag`.
+
+### Workflow examples
+
+Activate the virtualenv first (see `## Setup`).
+
+```bash
+# 0) fast smoke pass — real runs with tiny budgets; numbers are NOT results
+python main.py --mode compare --quick
+
+# 1) one method end-to-end: train -> save checkpoint -> report -> plots
+python main.py --mode train --algorithm dqn
+python main.py --mode train --algorithm coordinated --agents 3
+
+# 2) evaluate a saved checkpoint only (no retraining)
+python main.py --mode evaluate --algorithm multiagent --agents 3
+
+# 3) headline comparison: random / Q-learning / DQN / independent /
+#    rule-based / coordinated / CTDE  (long: this is real training)
+python main.py --mode compare
+
+# 4) Phase 12 ablation and Phase 13 scalability
+python main.py --mode ablation
+python main.py --mode scalability --agent-counts 1,2,3,4,5
+
+# 5) restrict to the headline pair only
+python main.py --mode compare --methods multiagent,coordinated
+```
+
+Runtime scales with episodes × agents × steps — that is the real cost of real
+runs, and it is measured and reported (`training_seconds`, `evaluation_seconds`,
+`computation_seconds`) rather than hidden.
+
+### Standalone driver scripts
+
+The original per-developer drivers are still runnable and are handy for chunked
+or resumable runs:
+
+```bash
+# single-agent: random vs Q-learning vs DQN (Phases 4, 5, 9, 10, 11)
+python scripts/run_rl_experiments.py                 # full suite
+python scripts/run_rl_experiments.py --quick         # reduced budgets
+python scripts/run_rl_experiments.py --suite single  # 5x5 + 10x10 only
+
+# multi-agent: ablation + scalability (Phases 12, 13; the full suite is long)
+python scripts/run_marl_experiments.py --quick       # smoke test
+python scripts/run_marl_experiments.py --suite ablation
+python scripts/run_marl_experiments.py --suite scalability --agents 2,3,4,5
+
+# run a subset of families; --name keeps chunked runs from overwriting each other
+python scripts/run_marl_experiments.py --suite ablation \
+    --kinds rule_based,ctde --name marl_ablation_extra_full
+
+# one-off DQN tuning diagnostics (probes, not deliverables)
+python scripts/diag_dqn_convergence.py
+```
+
+`run_marl_experiments.py` writes its `marl_*.{json,csv}` output after every
+finished configuration, so an interrupted multi-hour suite keeps the
+configurations it already completed.
+
+### Interactive visualization sweep
+
+```bash
+bash scripts/visualize_all_algorithms.sh              # every algorithm, 45 s each
+bash scripts/visualize_all_algorithms.sh 90           # slower pace
+bash scripts/visualize_all_algorithms.sh 60 coordinated_dqn,ctde_inspired   # subset
+```
+
+### Outputs
+
+| Path | Contents |
+|------|----------|
+| `experiments/results/<name>.json` | full report: manifest + aggregate rows + per-episode metrics |
+| `experiments/results/<name>.csv` | one row per method/condition (aggregates) |
+| `experiments/results/manifest_<name>.json` | reproducibility manifest (seeds, scenario, suite, budgets, counts) |
+| `experiments/results/comparison_episodes.csv` · `comparison_training_history.csv` | per-episode evaluation metrics and training curves |
+| `experiments/plots/*.png` | reward/success/collisions/steps curves, comparison bars, scalability and ablation figures |
+| `models/q_learning/`, `models/dqn/`, `models/multi_agent/` | saved checkpoints (`--model` / `--model-tag` pick them up) |
+| `experiments/logs/*.jsonl` | optional JSON-Lines event log from `--event-log` |
+
+All of the above are git-ignored.
+
+### Reproducibility
+
+* Scenarios are frozen JSON files in `experiments/scenarios/`, shared by Python
+  and Unity, and never edited between compared runs.
+* Layout seeds are explicit everywhere: policy seeds via `--seed`, random-layout
+  seeds as `seed_start + episode_index` (identical sequence for every method),
+  and per-agent DQN seeds as `seed + agent_id`.
+* Every method in a comparison run uses the same `--train-episodes` budget; the
+  epsilon schedule lands exactly on `epsilon_min` at the end of the budget, so
+  changing the budget does not advantage any method.
+* Reports refuse to print rows produced under different conditions
+  (`comparison.assert_fair`). Re-run with `--quick` for a fast smoke check, but
+  report only full-suite numbers.
 
 ## Python ↔ Unity
 
